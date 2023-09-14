@@ -41,6 +41,82 @@ ModelData<-Cdata %>%
          Proteinaceous = Tryptophan_Like +Tyrosine_Like) %>% 
   mutate_at(vars("pH":"Proteinaceous"),  function(x) scale(x, center = TRUE)) 
 
+### Create a plot of the raw data that went into the model
+ModelData_notlog<-Cdata %>%
+  filter(Plate_Seep == "Plate") %>%
+  mutate(Humics = VisibleHumidic_Like+MarineHumic_Like,
+         Proteinaceous = Tryptophan_Like +Tyrosine_Like)%>%
+  select(Location, Tide, Day.Night = Day_Night, TimeBlock, Season, Salinity,Temperature, Silicate_umolL, NN_umolL, TA, pH, Humics,Proteinaceous, NEP.proxy, NEC.proxy) %>%
+  pivot_longer(cols = c(Salinity:NEC.proxy), names_to = "Parameters", values_to = "Values") %>%
+  mutate(Parameters = factor(Parameters, levels= c("Salinity","Temperature", "Silicate_umolL", "NN_umolL","TA", "pH", "Humics","Proteinaceous", "NEP.proxy", "NEC.proxy"))) %>%
+  mutate(nicenames = case_when(
+    Parameters == "Salinity" ~"a. Salinity <br> (PSU)",
+    Parameters == "Temperature" ~ "b. Temperature <br> (\u00B0C)",
+    Parameters == "pH" ~ "c. pH<sub>T</sub>",
+    Parameters == "TA" ~ "d. Total Alkalinity <br> (&mu;mol kg<sup>-1</sup>)",
+    Parameters == "NN_umolL" ~ "e. Nitrate+Nitrite <br> (&mu;mol L<sup>-1</sup>)",
+    Parameters == "Silicate_umolL" ~ "f. Silicate <br> (&mu;mol L<sup>-1</sup>)",
+    Parameters == "Humics" ~ "g. Humic fDOM <br> (RU)",
+    Parameters == "Proteinaceous" ~"h. Proteinaceous fDOM <br> (RU)",
+    Parameters == "NEP.proxy"~"i. NEP Potential <br> (&Delta; &mu;mol kg<sup>-1</sup>)",
+    Parameters == "NEC.proxy"~"j. NEC Potential <br> (&Delta; &mu;mol kg<sup>-1</sup>)"))
+
+Datameans<-ModelData_notlog %>%
+  group_by(Location, Season, TimeBlock, Tide, nicenames)%>%
+  summarise(mean_vals = mean(Values, na.rm = TRUE),
+            se_vals = sd(Values, na.rm = TRUE)/sqrt(n()))
+
+p_dry<-ModelData_notlog %>%
+  filter(Season == "Dry")%>%
+  ggplot(aes(color = Tide, shape = TimeBlock))+
+  geom_jitter(aes(x = Location, y = Values, color = Tide, shape = TimeBlock), alpha = 0.2)+
+  geom_point(data = Datameans %>% filter(Season =="Dry"), aes(x = Location, y = mean_vals), size = 2)+
+  geom_errorbar(data = Datameans %>% filter(Season =="Dry"), aes(x = Location, ymin = mean_vals - se_vals, ymax = mean_vals+se_vals), width = 0.1)+
+  scale_color_manual(values = c("#85556e","#91b793"))+
+  labs(x = "", y = " Dry Season Values",
+       shape = "Time Block")+
+  facet_wrap(~nicenames, scales = "free", nrow = 2)+
+  theme_bw()+
+  theme(strip.text = ggtext::element_markdown(),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 14))
+
+ModelData_notlog <- ModelData_notlog %>%
+  mutate(nicenames = case_when(
+    Parameters == "Salinity" ~"k. Salinity <br> (PSU)",
+    Parameters == "Temperature" ~ "l. Temperature <br> (\u00B0C)",
+    Parameters == "pH" ~ "m. pH<sub>T</sub>",
+    Parameters == "TA" ~ "n. Total Alkalinity <br> (&mu;mol kg<sup>-1</sup>)",
+    Parameters == "NN_umolL" ~ "o. Nitrate+Nitrite <br> (&mu;mol L<sup>-1</sup>)",
+    Parameters == "Silicate_umolL" ~ "p. Silicate <br> (&mu;mol L<sup>-1</sup>)",
+    Parameters == "Humics" ~ "q. Humic fDOM <br> (RU)",
+    Parameters == "Proteinaceous" ~"r. Proteinaceous fDOM <br> (RU)",
+    Parameters == "NEP.proxy"~"s. NEP Potential <br> (&Delta; &mu;mol kg<sup>-1</sup>)",
+    Parameters == "NEC.proxy"~"t. NEC Potential <br> (&Delta; &mu;mol kg<sup>-1</sup>)"))
+
+Datameans<-ModelData_notlog %>%
+  group_by(Location, Season, TimeBlock, Tide, nicenames)%>%
+  summarise(mean_vals = mean(Values, na.rm = TRUE),
+            se_vals = sd(Values, na.rm = TRUE)/sqrt(n()))
+
+p_wet<-ModelData_notlog %>%
+  filter(Season == "Wet")%>%
+  ggplot(aes(color = Tide, shape = TimeBlock))+
+  geom_jitter(aes(x = Location, y = Values, color = Tide, shape = TimeBlock), alpha = 0.2)+
+  geom_point(data = Datameans %>% filter(Season =="Wet"), aes(x = Location, y = mean_vals), size = 2)+
+  geom_errorbar(data = Datameans %>% filter(Season =="Wet"), aes(x = Location, ymin = mean_vals - se_vals, ymax = mean_vals+se_vals), width = 0.1)+
+  scale_color_manual(values = c("#85556e","#91b793"))+
+  labs(x = "", y = " Wet Season Values",
+       shape = "Time Block")+
+  facet_wrap(~nicenames, scales = "free", nrow = 2)+
+  theme_bw()+
+  theme(strip.text = ggtext::element_markdown(),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 14))
+
+p_dry/p_wet+plot_layout(guides = "collect")
+
+ggsave(here("Output","Data_raw.pdf"), width = 12, height = 10, device = cairo_pdf)
 ### Create the Bayesian linear models ####
 
 NNmod<-bf(NNumolL ~SilicateumolL, family = "student") ### N and P are highly correlated 
