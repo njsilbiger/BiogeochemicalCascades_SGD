@@ -149,7 +149,8 @@ p1_both<-V_pca_Data_all_both %>%
   geom_hline(yintercept = 0, lty = 2)+
   geom_vline(xintercept = 0, lty = 2)+
   ggforce::geom_mark_ellipse(
-    aes(fill = Tide, label = paste(TimeBlock, Tide), color =Tide), 
+    aes(#fill = Tide, 
+        label = paste(TimeBlock, Tide), color =Tide), 
     alpha = .35, show.legend = FALSE,  label.buffer = unit(1, "mm"), con.cap=0, tol = 0.05)+
   geom_point(size = 2) +
   labs(
@@ -279,7 +280,8 @@ p1c_both<-C_pca_Data_all_both %>%
        y = paste0("PC2 ","(",perc.explainedC_both[2],"%)"),
        x = "")+
   ggforce::geom_mark_ellipse(
-    aes(fill = Tide, label = paste(TimeBlock, Tide), color = Tide), 
+    aes(#fill = Tide, 
+        label = paste(TimeBlock, Tide), color = Tide), 
     alpha = .35, show.legend = FALSE,  label.buffer = unit(1, "mm"), con.cap = 0)+
   geom_point(size = 2) +
   theme_bw()+
