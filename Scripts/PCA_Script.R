@@ -207,6 +207,18 @@ VarariPCA_both<-(p1_both)/(p2_both)+
                                                             unit = "pt"))))
 
 ggsave(plot = VarariPCA_both, filename = here("Output","VarariPCA_both.pdf"), width = 15, height = 15)
+
+## MANOVA looking at the effect of tide and day/night by season
+
+V_wet_MANOVA<-manova(cbind(PC1,PC2)~Tide*Day_Night, V_pca_Data_all_both %>%
+                       filter(Season == "Wet"))
+anova(V_wet_MANOVA)
+
+
+V_dry_MANOVA<-manova(cbind(PC1,PC2)~Tide*Day_Night, V_pca_Data_all_both %>%
+                       filter(Season == "Dry"))
+anova(V_dry_MANOVA)
+
 #### Cabral #####
 
 #Extract the cabral data
@@ -341,6 +353,17 @@ CabralPCA_both<-(p1c_both)/(p2c_both)+
                                                             unit = "pt"))))
 
 ggsave(plot = CabralPCA_both, filename = here("Output","CabralPCA_both.pdf"), width = 15, height = 15)
+
+
+## MANOVA looking at the effect of tide and day/night by season
+
+C_wet_MANOVA<-manova(cbind(PC1,PC2)~Tide*Day_Night, C_pca_Data_all_both %>%
+                       filter(Season == "Wet"))
+anova(C_wet_MANOVA)
+
+C_dry_MANOVA<-manova(cbind(PC1,PC2)~Tide*Day_Night, C_pca_Data_all_both %>%
+                       filter(Season == "Dry"))
+anova(C_dry_MANOVA)
 
 
 ## Calculate the ranges for each parameter
