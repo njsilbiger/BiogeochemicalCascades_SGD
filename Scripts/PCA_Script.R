@@ -521,5 +521,48 @@ mx<-mean_spring %>%
 mx
    
 
+### Mean plats only 
+mean_plates<-Data %>%
+  mutate(Humics = VisibleHumidic_Like+MarineHumic_Like,
+         Proteinaceous = Tyrosine_Like+Tryptophan_Like) %>%
+  filter(Plate_Seep == "Plate") %>% # just do the seep data
+  select(Location, Salinity,TA,pH,Phosphate_umolL:Ammonia_umolL, Humics,Proteinaceous, Temperature)%>%
+  # select(Location, Salinity, TA: Lignin_Like, TempInSitu_seep) %>%
+  pivot_longer(cols = c(Salinity, TA: Temperature)) %>%
+  drop_na()%>%
+  group_by(Location, name)%>%
+  summarise(mean = round(mean(value, na.rm = TRUE),2),
+            SE = round(sd(value, na.rm = TRUE)/sqrt(n()),2)) %>%
+  mutate(unit = case_when(name == "Temperature" ~ " &deg;C", # add units
+                          name %in% c("Ammonia_umolL","NN_umolL","Silicate_umolL","Phosphate_umolL")~" &mu;mol L<sup>-1</sup>",
+                          name %in% c("M_C","HIX")~ " Ratio",
+                          name %in% c("Salinity")~ " psu",
+                          name %in% c("pH")~ " pH total scale",
+                          name == "TA"~ " &mu;mol kg<sup>-1</sup>",
+                          name %in% c("Lignin_Like","Tyrosine_Like","Tryptophan_Like","MarineHumic_Like","VisibleHumidic_Like", "Humics","Proteinaceous")~" Raman Units"),
+         nicenames = case_when(name == "TempInSitu_seep" ~ "Temperature",
+                               name == "pH" ~ "pH<sub>T</sub>",
+                               #    name == "Lignin_Like" ~"Lignin Like",
+                               #   name == "M_C" ~ "M:C",
+                               name == "Tyrosine_Like" ~ "Tyrosine Like",
+                               name == "Tryptophan_Like" ~ "Tryptophan Like",
+                               name == "HIX"~"HIX",
+                               #  name == "MarineHumic_Like" ~ "Marine Humic Like",
+                               name == "VisibleHumidic_Like" ~ "Visible Humic Like",
+                               name == "Ammonia_umolL" ~ "Ammonium",
+                               name == "TA" ~ "Total Alkalinity",
+                               name == "Phosphate_umolL" ~ "Phosphate",
+                               name == "NN_umolL" ~ "Nitrate+Nitrite",
+                               name == "Silicate_umolL" ~ "Silicate",
+                               name == "Salinity" ~"Salinity",
+                               name == "Humics" ~"Humics fDOM",
+                               name == "Proteinaceous"~"Proteinaceous fDOM"
+                               
+                               
+         )) %>%
+  pivot_wider(values_from = c(mean,SE), names_from  = Location)
+
+
+
 ### Only keep certain dataframes for eco metab script
 rm(list= ls()[!(ls() %in% c("Data", "Datalog", "remove_varari","remove_cabral","remove_vararilog","remove_cabrallog"))])
