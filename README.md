@@ -1,6 +1,7 @@
 # Title: Nutrient subsidies restructure coral reef dissolved carbon fluxes via biogeochemical cascades
 This repository includes data and code for the above manuscript
 
+# Journal: Ecological Monographs  
 
 **Authors:** Nyssa J Silbiger, Megan J. Donahue, Benjamin Hagedorn, Danielle M. Barnas, Hendrikje Jorissen, Jamie R. Kerlin, Rayna McClintock, Emily Nixon, Wesley J. Sparagon, Maya Zeff, Craig E. Nelson
  
