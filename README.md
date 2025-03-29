@@ -9,7 +9,8 @@ This repository includes data and code for the above manuscript
 
 **Contents:** There are three folders and a README.md file.
 
-**Data:** These are the original data files that were used in the code. There are additional datafiles available on github that are linked within the scripts.
+**Data:** These are the original data files that were used in the code.  
+- Discrete_WetSeason.csv and Discrete_DrySeason.csv are the data sets used for statistical analyses
 
 **Output:** Output plots and summary statistics from the code
 
