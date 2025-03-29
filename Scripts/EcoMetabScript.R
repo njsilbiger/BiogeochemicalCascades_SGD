@@ -51,7 +51,6 @@ Data <- Data %>%
   left_join(distance) %>% # add in the distance and depth data
   left_join(currentspeed)%>%
   left_join(SiteDepth) %>%
-  select(!c(Top_Plate_ID:Jamie_Plate_ID)) %>%
   mutate(residence_time_h = (1/(CurrentSpeed_m_s*60))*reeflength,
           rho = swRho(salinity = Salinity, temperature = Temperature, pressure = 0, eos="unesco")) # calculate seawater density in kg/m3
 

@@ -19,10 +19,8 @@ library(glue)
 library(htmlTable)
 
 # load the 24 hour chemistry data #####################
-Data<-read_csv("https://raw.githubusercontent.com/njsilbiger/MooreaSGD_site-selection/main/Data/August2021/Allbiogeochemdata_QC2.csv") %>% mutate(Season = "Dry")
-
-Data_march<-read_csv("https://raw.githubusercontent.com/njsilbiger/MooreaSGD_site-selection/main/Data/March2022/Allbiogeochemdata_QC_march_fdom2.csv")%>% mutate(Season = "Wet") %>%
-  mutate(DateTime = mdy_hms(paste(Date,as.character(Time))))
+Data<-read_csv(here("Data","Discrete_DrySeason.csv"))
+Data_march<-read_csv(here("Data","Discrete_WetSeason.csv"))
 
 
 # Load the Seep Data
@@ -46,10 +44,6 @@ Data<-Data %>%
     TimeBlock == "Morning" ~ "Night" ,
     TimeBlock == "Night" ~ "Night",
     TimeBlock == "Afternoon" ~ "Day"
-    # Tide == "Low" & Day_Night == "Day" ~ "Night", # change day and night delineations... dusk and dawn are now night and day 
-    # Tide == "Low" & Day_Night == "Night" ~ "Day",
-    # Tide == "High" & Day_Night == "Day" ~ "Day",
-    # Tide == "High" & Day_Night == "Night" ~ "Night"
   ),
   Day_Night = NewDay_Night) %>% # replace it
   select(!NewDay_Night)
@@ -57,20 +51,6 @@ Data<-Data %>%
 
 
 ### Varari #####
-## There seems to be a contaminated nutrient sample for V2 Low tide on the 8/8/2021.  Remove this point
-remove<-Data %>% filter(CowTagID=="V2", Tide == "Low",Day_Night=="Night", Date =="8/8/2021") 
-removea<-Data %>% filter(CowTagID == "V17", Tide == "High", Day_Night == "Night", Season == "Wet")# Ammonia is an outlier
-
-## also filter out all the data from the first low tide where the water level was super high
-remove2<-Data %>% filter(Tide =="Low", Day_Night=="Night", Date == "8/6/2021")
-remove_varari<-bind_rows(remove, removea, remove2) # bring the "bad data" into one tibble
- 
-# fdom or silicate data off for these
-remove3<-Data %>% filter(CowTagID== "C4", Tide =="Low", Day_Night=="Day", Date == "8/9/2021")
-remove4<-Data %>% filter(CowTagID== "C2", Tide =="High", Day_Night=="Night", Date == "3/31/2022")
-remove5<-Data %>% filter(CowTagID== "C17", Tide =="Low", Day_Night=="Day", Date == "3/30/2022")
-
-remove_cabral<- bind_rows(remove3, remove4,remove5) # bring the "bad data" into one tibble
 
 ## create log transformed data for everything except for salinity, temperature, TA, and pH
 Datalog<-Data %>%
@@ -78,13 +58,8 @@ Datalog<-Data %>%
          Proteinaceous = Tyrosine_Like+Tryptophan_Like)%>%
   mutate_at(vars(Phosphate_umolL:Lignin_Like, Humics, Proteinaceous), .funs = function(x){log(x+0.001)})
 
-remove_vararilog<-remove_varari %>% mutate_at(vars(Phosphate_umolL:Lignin_Like), .funs = function(x){log(x+0.001)})
-remove_cabrallog<-remove_cabral %>% mutate_at(vars(Phosphate_umolL:Lignin_Like), .funs = function(x){log(x+0.001)})
-
-
 # extract the params for the PCA
 V_pca_Data_both<-Datalog %>%
-   anti_join(remove_vararilog)%>%
   filter(Location == "Varari", Plate_Seep=="Plate") %>%
   select(Season, Salinity,pH,Phosphate_umolL:NN_umolL,Ammonia_umolL, Humics,Proteinaceous, TA)%>%
   group_by(Season)%>%
@@ -133,8 +108,6 @@ PC_loadings_both<-as_tibble(pca_V_both$rotation) %>%
 # Put it with all the original data
 
 V_pca_Data_all_both<-Data %>%
-  anti_join(remove_varari)%>%
-  #anti_join(remove2)%>%
   filter(Location == "Varari", Plate_Seep=="Plate") %>%
   drop_na(Salinity,pH,Phosphate_umolL:Lignin_Like )%>%
   bind_cols(PC_scores_both)
@@ -154,7 +127,6 @@ p1_both<-V_pca_Data_all_both %>%
     alpha = .35, show.legend = FALSE,  label.buffer = unit(1, "mm"), con.cap=0, tol = 0.05)+
   geom_point(size = 2) +
   labs(
-      # x = paste0("PC1 ","(",perc.explained_both[1],"%)"),
        x = "",
        y = paste0("PC2 ","(",perc.explained_both[2],"%)"))+
   theme_bw()+
@@ -182,12 +154,10 @@ p2_both<-PC_loadings_both %>%
   labs(color ="",
        y = "",
        x = paste0("PC1 ","(",perc.explained_both[1],"%)"))+
-       #y = paste0("PC2 ","(",perc.explained_both[2],"%)"))+
-  scale_color_manual(values = wes_palette("Darjeeling1"))+
+    scale_color_manual(values = wes_palette("Darjeeling1"))+
   theme_bw()+
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
-        #legend.position = c(0.75, 0.75),
         legend.position = "none",
         legend.text = element_markdown(size = 16),
         legend.key.size = unit(1, 'cm'),
@@ -224,7 +194,6 @@ anova(V_dry_MANOVA)
 #Extract the cabral data
 
 C_pca_Data_both<-Datalog %>%
-  anti_join(remove_cabrallog)%>%
   filter(Location == "Cabral", Plate_Seep=="Plate") %>%
   select(Season, Salinity,pH,Phosphate_umolL:NN_umolL,Ammonia_umolL, Humics,Proteinaceous, TA)%>%
   group_by(Season)%>%
@@ -271,8 +240,6 @@ PC_loadingsC_both<-as_tibble(pca_C_both$rotation) %>%
 # Put it with all the original data
 
 C_pca_Data_all_both<-Data %>%
-  anti_join(remove_cabral)%>%
-  select(!Jamie_Plate_ID)%>% # Jamie's plates are all NA here
   filter(Location == "Cabral", Plate_Seep=="Plate") %>%
   drop_na(Salinity,pH,Phosphate_umolL:NN_umolL, VisibleHumidic_Like, Tyrosine_Like, Tryptophan_Like,TA) %>%
   bind_cols(PC_scoresC_both)  
@@ -527,7 +494,6 @@ mean_plates<-Data %>%
          Proteinaceous = Tyrosine_Like+Tryptophan_Like) %>%
   filter(Plate_Seep == "Plate") %>% # just do the seep data
   select(Location, Salinity,TA,pH,Phosphate_umolL:Ammonia_umolL, Humics,Proteinaceous, Temperature)%>%
-  # select(Location, Salinity, TA: Lignin_Like, TempInSitu_seep) %>%
   pivot_longer(cols = c(Salinity, TA: Temperature)) %>%
   drop_na()%>%
   group_by(Location, name)%>%
@@ -565,4 +531,4 @@ mean_plates<-Data %>%
 
 
 ### Only keep certain dataframes for eco metab script
-rm(list= ls()[!(ls() %in% c("Data", "Datalog", "remove_varari","remove_cabral","remove_vararilog","remove_cabrallog"))])
+rm(list= ls()[!(ls() %in% c("Data", "Datalog"))])

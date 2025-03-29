@@ -22,12 +22,10 @@ library(broom)
 source(here("Scripts","EcoMetabScript.R"))
 
 #remove unnecessary dataframes for this analysis
-rm(list= ls()[!(ls() %in% c("Cdata","Data", "Datalog", "remove_varari","remove_cabral","remove_vararilog","remove_cabrallog","turb_all"))])
+rm(list= ls()[!(ls() %in% c("Cdata","Data", "Datalog", "turb_all"))])
 
 Cdata <- Cdata%>%
-  anti_join(remove_varari)%>% # remove the bad data
-  anti_join(remove_cabral) %>%
-  filter(Silicate_umolL <15, NEC.proxy<100)
+  filter(Silicate_umolL <15, NEC.proxy<100) # remove an outlier
 
 # extract the model data and log transform variables that need it
 ModelData<-Cdata %>%
@@ -727,27 +725,6 @@ AllPlot<-(CoefPlot|NNSi)/(NEPNN|NEPTemp)/(NEPpH|SipH)/(NECpH|NECTemp)/(NEPHumics
 
 ggsave(here("Output","marginaleffects_lines.pdf"), width = 12, height = 18, useDingbats = FALSE)
 
-### some summary of salinity and silicate plots for the supplement
-Data %>%
-  filter(Plate_Seep == c("Plate"))%>%
-  ggplot(aes(x = Salinity, y = Silicate_umolL, color = Location))+
-  geom_point()+
-  geom_smooth(method = "glm", formula = y~x,
-               method.args = list(family = gaussian(link = 'log')))+
-  coord_trans(y = "log")+
-  scale_color_manual(values = c("#16697A","#D64550"))+
-  labs(y = expression(paste("Silicate", " (",mu,"mol L"^-1,")")),
-       x = "Salinity")+
-  facet_grid(Season~Location, scales = "free")+
-  theme_bw()+
-  theme(legend.position = "none",
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
-        axis.text = element_text(size = 11),
-        strip.background = element_blank(),
-        strip.text = element_text(size = 14, face = "bold"))
-
-ggsave(here("Output","SalinityvsSI.pdf"), width = 10, height = 10)
 
 # model for silicate and salinity
 summary(lm(data = Cdata %>%

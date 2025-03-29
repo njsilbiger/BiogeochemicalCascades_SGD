@@ -8,7 +8,7 @@ library(here)
 
 
 #Load benthic data collected by Nyssa in March 2022
-Benthic.Data <-read_csv("https://raw.githubusercontent.com/njsilbiger/MooreaSGD_site-selection/main/Data/March2022/BenthicData/BenthicData.csv")
+Benthic.Data<-read_csv(here("Data","BenthicData.csv"))
 
 #Clean data and summarise per location
 Benthic.Info <-Benthic.Data %>% 
