@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/653257270.svg)](https://doi.org/10.5281/zenodo.15104029)
 # Title: Nutrient subsidies restructure coral reef dissolved carbon fluxes via biogeochemical cascades
 This repository includes data and code for the above manuscript
 
